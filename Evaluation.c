@@ -22,27 +22,27 @@ void check(bool cond, char *s)
     }
 }
 
-void sig_handler(int sig)
-{
-    if (sig == SIGCHLD)
-    {
-        pid_t cpid;
-        int cstat;
+// void sig_handler(int sig)
+// {
+//     if (sig == SIGCHLD)
+//     {
+//         pid_t cpid;
+//         int cstat;
 
-        cpid = wait(&cstat);
-        if (cpid != -1)
-            printf("Zombie process %d detected, returned %d.\n", cpid, cstat);
-    }
-}
+//         cpid = wait(&cstat);
+//         if (cpid != -1)
+//             printf("Zombie process %d detected, returned %d.\n", cpid, cstat);
+//     }
+// }
 
 int evaluer_expr(Expression *e)
 {
     // Signals handling
-    struct sigaction act;
-    act.sa_flags = 0;
-    sigemptyset(&act.sa_mask);
-    act.sa_handler = sig_handler;
-    sigaction(SIGCHLD, &act, NULL);
+    // struct sigaction act;
+    // act.sa_flags = 0;
+    // sigemptyset(&act.sa_mask);
+    // act.sa_handler = sig_handler;
+    // sigaction(SIGCHLD, &act, NULL);
 
     // Empty expression handling
     if (e->type == VIDE)

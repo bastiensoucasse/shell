@@ -1,4 +1,4 @@
-/* Construction des arbres représentant des commandes */
+/* Construction des arbres reprï¿½sentant des commandes */
 
 #include "Shell.h"
 #include "Affichage.h"
@@ -14,11 +14,11 @@ extern int yyparse_string(char *);
 
 Expression *ExpressionAnalysee;
 
-bool interactive_mode = 1; // par défaut on utilise readline
-int status = 0;            // valeur retournée par la dernière commande
+bool interactive_mode = 0; // par dï¿½faut on utilise readline
+int status = 0;            // valeur retournï¿½e par la derniï¿½re commande
 
 /*
- * Construit une expression à partir de sous-expressions
+ * Construit une expression ï¿½ partir de sous-expressions
  */
 Expression *ConstruireNoeud(expr_t type, Expression *g, Expression *d, char **args)
 {
@@ -49,7 +49,7 @@ int LongueurListe(char **l)
 } /* LongueurListe */
 
 /*
- * Renvoie une liste d'arguments, la première case étant initialisée à NULL, la
+ * Renvoie une liste d'arguments, la premiï¿½re case ï¿½tant initialisï¿½e ï¿½ NULL, la
  * liste pouvant contenir NB_ARGS arguments (plus le pointeur NULL de fin de
  * liste)
  */
@@ -63,7 +63,7 @@ char **InitialiserListeArguments(void)
 } /* InitialiserListeArguments */
 
 /*
- * Ajoute en fin de liste le nouvel argument et renvoie la liste résultante
+ * Ajoute en fin de liste le nouvel argument et renvoie la liste rï¿½sultante
  */
 char **AjouterArg(char **Liste, char *Arg)
 {
@@ -77,7 +77,7 @@ char **AjouterArg(char **Liste, char *Arg)
 } /* AjouterArg */
 
 /*
- * Fonction appelée lorsque l'utilisateur tape "".
+ * Fonction appelï¿½e lorsque l'utilisateur tape "".
  */
 void EndOfFile(void)
 {
@@ -85,7 +85,7 @@ void EndOfFile(void)
 } /* EndOfFile */
 
 /*
- * Appelée par yyparse() sur erreur syntaxique
+ * Appelï¿½e par yyparse() sur erreur syntaxique
  */
 void yyerror(char *s)
 {
@@ -93,7 +93,7 @@ void yyerror(char *s)
 }
 
 /*
- * Libération de la mémoire occupée par une expression
+ * Libï¿½ration de la mï¿½moire occupï¿½e par une expression
  */
 void expression_free(Expression *e)
 {
@@ -114,8 +114,8 @@ void expression_free(Expression *e)
 }
 
 /*
- * Lecture de la ligne de commande à l'aide de readline en mode interactif
- * Mémorisation dans l'historique des commandes
+ * Lecture de la ligne de commande ï¿½ l'aide de readline en mode interactif
+ * Mï¿½morisation dans l'historique des commandes
  * Analyse de la ligne lue 
  */
 
@@ -133,9 +133,9 @@ int my_yyparse(void)
       int len = strlen(line);
       add_history(line);          // Enregistre la line non vide dans l'historique courant
       line = realloc(line,len+2);
-      line[len]='\n';     // Ajoute \n à la line pour qu'elle puisse etre traité par le parseur
+      line[len]='\n';     // Ajoute \n ï¿½ la line pour qu'elle puisse etre traitï¿½ par le parseur
       line[len+1]='\0';
-      ret = yyparse_string(line); // Remplace l'entrée standard de yyparse par s
+      ret = yyparse_string(line); // Remplace l'entrï¿½e standard de yyparse par s
       free(line);
       return ret;
     }
@@ -150,37 +150,37 @@ int my_yyparse(void)
 }
 
 /*--------------------------------------------------------------------------------------.
-      | Lorsque l'analyse de la ligne de commande est effectuée sans erreur. La variable      |
-      | globale ExpressionAnalysee pointe sur un arbre représentant l'expression.  Le type    |
-      |       "Expression" de l'arbre est décrit dans le fichier Shell.h. Il contient 4       |
+      | Lorsque l'analyse de la ligne de commande est effectuï¿½e sans erreur. La variable      |
+      | globale ExpressionAnalysee pointe sur un arbre reprï¿½sentant l'expression.  Le type    |
+      |       "Expression" de l'arbre est dï¿½crit dans le fichier Shell.h. Il contient 4       |
       |       champs. Si e est du type Expression :					      |
       | 										      |
-      | - e.type est un type d'expression, contenant une valeur définie par énumération dans  |
-      |   Shell.h. Cette valeur peut être :					      	      |
+      | - e.type est un type d'expression, contenant une valeur dï¿½finie par ï¿½numï¿½ration dans  |
+      |   Shell.h. Cette valeur peut ï¿½tre :					      	      |
       | 										      |
       |   - VIDE, commande vide								      |
       |   - SIMPLE, commande simple et ses arguments					      |
-      |   - SEQUENCE, séquence (;) d'instructions					      |
-      |   - SEQUENCE_ET, séquence conditionnelle (&&) d'instructions			      |
-      |   - SEQUENCE_OU, séquence conditionnelle (||) d'instructions			      |
-      |   - BG, tâche en arrière plan (&)						      |
+      |   - SEQUENCE, sï¿½quence (;) d'instructions					      |
+      |   - SEQUENCE_ET, sï¿½quence conditionnelle (&&) d'instructions			      |
+      |   - SEQUENCE_OU, sï¿½quence conditionnelle (||) d'instructions			      |
+      |   - BG, tï¿½che en arriï¿½re plan (&)						      |
       |   - PIPE, pipe (|).								      |
-      |   - REDIRECTION_I, redirection de l'entrée (<)					      |
+      |   - REDIRECTION_I, redirection de l'entrï¿½e (<)					      |
       |   - REDIRECTION_O, redirection de la sortie (>)					      |
       |   - REDIRECTION_A, redirection de la sortie en mode APPEND (>>).		      |
       |   - REDIRECTION_E, redirection de la sortie erreur,  	   			      |
       |   - REDIRECTION_EO, redirection des sorties erreur et standard.			      |
       | 										      |
-      | - e.gauche et e.droite, de type Expression *, représentent une sous-expression gauche |
-      |       et une sous-expression droite. Ces deux champs ne sont pas utilisés pour les    |
-      |       types VIDE et SIMPLE. Pour les expressions réclamant deux sous-expressions      |
-      |       (SEQUENCE, SEQUENCE_ET, SEQUENCE_OU, et PIPE) ces deux champs sont utilisés     |
-      |       simultannément.  Pour les autres champs, seule l'expression gauche est	      |
-      |       utilisée.									      |
+      | - e.gauche et e.droite, de type Expression *, reprï¿½sentent une sous-expression gauche |
+      |       et une sous-expression droite. Ces deux champs ne sont pas utilisï¿½s pour les    |
+      |       types VIDE et SIMPLE. Pour les expressions rï¿½clamant deux sous-expressions      |
+      |       (SEQUENCE, SEQUENCE_ET, SEQUENCE_OU, et PIPE) ces deux champs sont utilisï¿½s     |
+      |       simultannï¿½ment.  Pour les autres champs, seule l'expression gauche est	      |
+      |       utilisï¿½e.									      |
       | 										      |
       | - e.arguments, de type char **, a deux interpretations :			      |
       | 										      |
-      |      - si le type de la commande est simple, e.arguments pointe sur un tableau à la   |
+      |      - si le type de la commande est simple, e.arguments pointe sur un tableau ï¿½ la   |
       |       argv. (e.arguments)[0] est le nom de la commande, (e.arguments)[1] est le	      |
       |       premier argument, etc.							      |
       | 										      |
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      /* L'analyse de la ligne de commande a donné une erreur */
+      /* L'analyse de la ligne de commande a donnï¿½ une erreur */
     }
   }
   return 0;
