@@ -13,7 +13,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void check(bool cond, char *s)
+static struct sigaction act;
+
+static void check(bool cond, char *s)
 {
     if (!cond)
     {
@@ -22,55 +24,32 @@ void check(bool cond, char *s)
     }
 }
 
-// void sig_handler(int sig)
-// {
-//     if (sig == SIGCHLD)
-//     {
-//         pid_t cpid;
-//         int cstat;
+static void sig_handler(int sig)
+{
+    pid_t cpid;
+    int cstat;
 
-//         cpid = wait(&cstat);
-//         if (cpid != -1)
-//             printf("Zombie process %d detected, returned %d.\n", cpid, cstat);
-//     }
-// }
+    while ((cpid = waitpid(-1, &cstat, WNOHANG)) > 0)
+        fprintf(stderr, "Zombie process %d detected.\n", cpid);
+}
 
 int evaluer_expr(Expression *e)
 {
     // Signals handling
-    // struct sigaction act;
-    // act.sa_flags = 0;
-    // sigemptyset(&act.sa_mask);
-    // act.sa_handler = sig_handler;
-    // sigaction(SIGCHLD, &act, NULL);
+    sigprocmask(SIG_UNBLOCK, &act.sa_mask, NULL);
+    sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, SIGCHLD);
+    act.sa_flags = 0;
+    act.sa_handler = sig_handler;
+    check(sigaction(SIGCHLD, &act, NULL) != -1, "Sigaction failed.");
+    sigprocmask(SIG_BLOCK, &act.sa_mask, NULL);
 
     // Empty expression handling
     if (e->type == VIDE)
         return EXIT_SUCCESS;
 
-    // Internal commands handling
-    if (e->type == SIMPLE && !strcmp(e->arguments[0], "echo"))
-    {
-        int i = 1;
-        while (e->arguments[i] != NULL)
-        {
-            if (i != 1)
-                printf(" ");
-            printf("%s", e->arguments[i]);
-            i++;
-        }
-        printf("\n");
-        return EXIT_SUCCESS;
-    }
-    if (e->type == SIMPLE && !strcmp(e->arguments[0], "source"))
-    {
-        // TODO: source.
-        fprintf(stderr, "%s is not yet implemented.\n", e->arguments[0]);
-        return EXIT_FAILURE;
-    }
-
-    // External commands handling
-    if (e->type == SIMPLE || e->type == BG)
+    // Commands handling
+    if (e->type == SIMPLE)
     {
         pid_t cpid;
         int cstat;
@@ -80,16 +59,48 @@ int evaluer_expr(Expression *e)
 
         if (!cpid)
         {
-            execvp(e->arguments[0], e->arguments);
-            exit(EXIT_FAILURE);
+            if (!strcmp(e->arguments[0], "echo"))
+            {
+                int i = 1;
+                while (e->arguments[i] != NULL)
+                {
+                    if (i != 1)
+                        printf(" ");
+                    printf("%s", e->arguments[i]);
+                    i++;
+                }
+                printf("\n");
+                exit(EXIT_SUCCESS);
+            }
+            else if (!strcmp(e->arguments[0], "source"))
+            {
+                // TODO
+                fprintf(stderr, "Command %s not yet implemented.\n", e->arguments[0]);
+                exit(EXIT_FAILURE);
+            }
+            else
+            {
+                execvp(e->arguments[0], e->arguments);
+                exit(EXIT_FAILURE);
+            }
         }
 
-        if (e->type == SIMPLE)
-            waitpid(cpid, &cstat, 0);
-        else
-            cstat = EXIT_SUCCESS;
-
+        waitpid(cpid, &cstat, 0);
         return cstat;
+    }
+
+    // Background handling
+    if (e->type == BG)
+    {
+        pid_t cpid;
+
+        cpid = fork();
+        check(cpid != -1, "fork");
+
+        if (!cpid)
+            exit(evaluer_expr(e->gauche));
+
+        return EXIT_SUCCESS;
     }
 
     // Sequences handling
@@ -131,7 +142,7 @@ int evaluer_expr(Expression *e)
             cstat[0] = evaluer_expr(e->gauche);
             check(dup2(fdstdout, STDOUT_FILENO) != -1, "Could not redirect stdout to fdstdout.");
 
-            close(pipedes[0]);
+            close(pipedes[1]);
             exit(cstat[0]);
         }
 
@@ -146,7 +157,7 @@ int evaluer_expr(Expression *e)
             cstat[1] = evaluer_expr(e->droite);
             check(dup2(fdstdin, STDIN_FILENO) != -1, "Could not redirect stdin to fdstdin.");
 
-            close(pipedes[1]);
+            close(pipedes[0]);
             exit(cstat[1]);
         }
 
@@ -154,7 +165,7 @@ int evaluer_expr(Expression *e)
         close(pipedes[1]);
 
         waitpid(cpid[0], &cstat[0], 0);
-        waitpid(cpid[0], &cstat[1], 0);
+        waitpid(cpid[1], &cstat[1], 0);
 
         return cstat[1];
     }

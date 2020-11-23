@@ -14,7 +14,7 @@ extern int yyparse_string(char *);
 
 Expression *ExpressionAnalysee;
 
-bool interactive_mode = 0; // par d�faut on utilise readline
+bool interactive_mode = 1; // par d�faut on utilise readline
 int status = 0;            // valeur retourn�e par la derni�re commande
 
 /*
